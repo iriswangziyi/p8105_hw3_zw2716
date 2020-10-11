@@ -1,7 +1,6 @@
 ---
 title: "Homework 3"
 author: "Iris (Ziyi) Wang"
-date: '`r format(Sys.time(), "%Y-%m-%d")`'
 output: github_document
 ---
 
@@ -164,8 +163,46 @@ accelerometer %>%
 Based on the above graph, I see the person has more activity during the (middle of the) day, and less/no activity during the early morning and late night. This makes sense as people generally asleep during the early morning and late night, and work during the (middle of the) day. In addition, this person seems to very low (almost 0) activities on one Saturday and Monday, maybe this is due to the person did not (forgot to) put on the accelerometer as him/she started the day.
 
 ### Problem 3
-First,
-
 ```{r load noaa data}
-data("ny_noaa") 
+data("ny_noaa")
+skimr::skim_without_charts(ny_noaa)
 ```
+The _**ny_noaa**_ shows New York state's weather data (precipitation, snowfall, temperature) from 1981-01-01 to 2010-12-31. _**ny_noaa**_ has `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns. The key variables are `r names(ny_noaa)`.
+
+###### Detailed explanation for each variables: 
+* id: Weather station ID
+* date: Date of observation
+* prcp: Precipitation (tenths of mm)
+* snow: Snowfall (mm)
+* snwd: Snow depth (mm)
+* tmax: Maximum temperature (tenths of degrees C)
+* tmin: Minimum temperature (tenths of degrees C)
+
+As we can see from the above information, there are a huge amount of missing data (by looking at the n_missing fields), which will be an issue for data exploration and analysis.
+
+#### Data Cleaning
+```{r load_noaa}
+ny_noaa %>% 
+    separate(date, 
+             into = c("year","month","day"), 
+             sep = "-") %>% 
+    mutate_at(vars(year,month,day), as.factor) %>% 
+    mutate_at(vars(tmax, tmin, prcp, snow, snwd), as.numeric) %>% 
+    mutate(tmax = tmax / 10,
+           tmin = tmin / 10,
+           prcp = prcp / 10)
+
+# snowfall, find the most commonly obs val
+snowfall = ny_noaa %>% 
+  count(snow) %>%
+  arrange(desc(n))
+```
+For snowfall, the most commonly observed value is **0**.  
+This makes sense as snow usually happens around winter time in New York, so during most of the year there will not be snow. The second commonly observed is **NA** (missing value), then the third commonly observed is **25**.
+
+#### Two-panel plot for the average max temperature in January and in July in each station across years. 
+
+Is there any observable / interpretable structure? Any outliers? 
+
+
+
