@@ -132,7 +132,8 @@ accelerometer = read_csv(path_to_P2_data) %>%
 skimr::skim_without_charts(accelerometer)
 ```
 
-After tidy and wrangle the data, the resulting _**accelerometer**_ data contains `r nrow(accelerometer)` rows and `r ncol(accelerometer)` columns. The variables in the _**accelerometer**_ are: `r names(accelerometer)`. Specifically, **weekday_vs_weekend** shows whether the day is a weekday or weekend; **activity_minute** and **activity_number** shows the minute for each activities.
+After tidy and wrangle the data, the resulting _**accelerometer**_ data contains `r nrow(accelerometer)` rows and `r ncol(accelerometer)` columns. The variables in the _**accelerometer**_ are: `r names(accelerometer)`.  
+Specifically, **weekday_vs_weekend** shows whether the day is a weekday or weekend; **activity_minute** and **activity_number** shows the minute for each activities.
 
 #### Traditional analyses of accelerometer data 
 ```{r total_activity, warning = F, message = F}
@@ -146,7 +147,8 @@ accelerometer %>%
     knitr::kable()
 ```
 
-Apparent trend I noticed is that week 4 and 5's Saturday both have the exact same amount of low activity, so I am a little curious whether that two numbers are resulted from reading error or technical error, or the person just happen to move less and has the same amount of activity. Another potential trend is that this person has relatively the same amount of activity on Wednesdays and Thursdays.
+Apparent trend I noticed is that week 4 and 5's Saturday both have the exact same amount of low activity, so I am a little curious whether that two numbers are resulted from reading error or technical error, or the person just happen to move less and has the same amount of activity.  
+Another potential trend is that this person has relatively the same amount of activity on Wednesdays and Thursdays.
 
 #### single-panel plot: 24-hour activity time courses for each day
 ```{r single-panel plot, warning = F, message = F}
@@ -160,6 +162,7 @@ accelerometer %>%
          y = "Activity Count") +
     guides(color = guide_legend(nrow = 1, byrow = T))
 ```
+
 Based on the above graph, I see the person has more activity during the (middle of the) day, and less/no activity during the early morning and late night. This makes sense as people generally asleep during the early morning and late night, and work during the (middle of the) day. In addition, this person seems to very low (almost 0) activities on one Saturday and Monday, maybe this is due to the person did not (forgot to) put on the accelerometer as him/she started the day.
 
 ### Problem 3
@@ -167,7 +170,7 @@ Based on the above graph, I see the person has more activity during the (middle 
 data("ny_noaa")
 skimr::skim_without_charts(ny_noaa)
 ```
-The _**ny_noaa**_ shows New York state's weather data (precipitation, snowfall, temperature) from 1981-01-01 to 2010-12-31. _**ny_noaa**_ has `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns. The key variables are `r names(ny_noaa)`.
+The _**ny_noaa**_ shows New York state's weather data (precipitation, snowfall, temperature) from 1981-01-01 to 2010-12-31. _**ny_noaa**_ has `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns. The key variables are `r names(ny_noaa)`.  
 
 ###### Detailed explanation for each variables: 
 * id: Weather station ID
@@ -176,7 +179,7 @@ The _**ny_noaa**_ shows New York state's weather data (precipitation, snowfall, 
 * snow: Snowfall (mm)
 * snwd: Snow depth (mm)
 * tmax: Maximum temperature (tenths of degrees C)
-* tmin: Minimum temperature (tenths of degrees C)
+* tmin: Minimum temperature (tenths of degrees C)  
 
 As we can see from the above information, there are a huge amount of missing data (by looking at the n_missing fields), which will be an issue for data exploration and analysis.
 
@@ -201,7 +204,6 @@ For snowfall, the most commonly observed value is **0**.
 This makes sense as snow usually happens around winter time in New York, so during most of the year there will not be snow. The second commonly observed is **NA** (missing value), then the third commonly observed is **25**.
 
 #### Two-panel plot for the average max temperature in January and in July in each station across years. 
-
 ```{r max temp, warning = F, message = F}
 ny_noaa_tidy %>%
     filter(month %in% c("01", "07")) %>%
@@ -215,10 +217,43 @@ ny_noaa_tidy %>%
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
     facet_grid(.~month ) +
     labs(title = "Average Max Temperature in January and in July in each station across years",
-        x = "Year", y = "Average Max Tempature (C)")
+        x = "Year", 
+        y = "Average Max Tempature (C)")
 ```
-Is there any observable / interpretable structure? Any outliers? 
+
 From the two-panel plot plots above we can see that the average max temperature for January is much lower then the average max temperature for July. This makes sense, as in New York, summer is in the July, which is much hotter than the winter in January.  
-Throughout 1981-2010, we can see an overall trend that the average max temperature for January has wider variation (range from -10C to 10C) than average max temperature for July (range from 20C to 35C). 
+
+Throughout 1981-2010, we can see an overall trend that the average max c for January has wider variation (range from -10C to 10C) than average max temperature for July (range from 20C to 35C). 
 In terms of outliers, both January and July has some outliers for average max temperature, this might due to measuring error, reading error, or an actually extreme temperature event.
 
+#### Two-panel plot showing (i) tmax vs tmin for the full dataset; and (ii) distribution of snowfall values > 0 and < 100 separately by year
+```{r tmax vs tmin, warning = F, message = F}
+tmax_vs_tmin = ny_noaa_tidy %>%
+    ggplot(aes(x = tmax, y = tmin)) + 
+    geom_bin2d() +
+    labs(title = "Min vs Max Tempatures",
+         x = "Max temperature (C)",
+         y = "Min temperature (C)") 
+```
+
+```{r distribution of snowfall, warning = F, message = F}
+dist_snow = ny_noaa_tidy %>%
+    filter(snow > 0 & snow < 100) %>%
+    group_by(year) %>%
+    ggplot(aes(x = year, y = snow)) +
+    geom_boxplot() +
+    stat_summary(fun = "median", color = "blue") +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+    labs(title = "Distribution of Snowfall",
+         x = "Years", 
+         y = "Snowfall (mm)") 
+```
+
+```{r final two-panel plot, warning = F, message = F}  
+(tmax_vs_tmin / dist_snow)
+```
+
+From the top plot in our two-panel plot, we can see that the min and max temperatures is centered in the middle of the plot with two bright yellow box showing the most commonly observed values (min at 0C and 20C; max at 5C and 25C).  
+
+There are also many overlapping values for min and max temperatures. 
+From the bottom plot in our two-panel plot, we can see that the distribution of snowfall has consistent/similar mean and IQR since 1982 to 2010, which is quite surprising to me. I am curious about any reason behinds it.
